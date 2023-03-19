@@ -1,26 +1,30 @@
-<svelte:head>
-	<title>About</title>
-	<meta name="description" content="About this app" />
-</svelte:head>
+<script lang="ts">
+  import BarChart from "./BarChart.svelte"
+  import { datasetStore } from "../../store"
+  import { onDestroy, onMount } from "svelte"
+  import type { PopulationData } from "../../store"
 
-<div class="text-column">
-	<h1>About this app</h1>
+  let data: Array<PopulationData>
+  const unsubscribe = datasetStore.subscribe((value) => (data = value))
 
-	<p>
-		This is a <a href="https://kit.svelte.dev">SvelteKit</a> app. You can make your own by typing the
-		following into your command line and following the prompts:
-	</p>
+  let message: { text: string } | undefined
 
-	<pre>npm create svelte@latest</pre>
+  onMount(async () => {
+    message = await fetch("http://localhost:8080").then((res) => res.json())
+  })
 
-	<p>
-		The page you're looking at is purely static HTML, with no client-side interactivity needed.
-		Because of that, we don't need to load any JavaScript. Try viewing the page's source, or opening
-		the devtools network panel and reloading.
-	</p>
+  const myInterval = setInterval(async () => {
+    message = await fetch("http://localhost:8080").then((res) => res.json())
+    console.log("message: " + message)
+  }, 5000)
 
-	<p>
-		The <a href="/sverdle">Sverdle</a> page illustrates SvelteKit's data loading and form handling. Try
-		using it with JavaScript disabled!
-	</p>
+  onDestroy(() => {
+    unsubscribe()
+    clearInterval(myInterval)
+  })
+</script>
+
+<div class="flex flex-row justify-center mt-8">
+  <h1>{message?.text}</h1>
+  <BarChart {data} />
 </div>
